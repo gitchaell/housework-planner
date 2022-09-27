@@ -1,7 +1,7 @@
 import fs from 'fs';
 import * as Whatsapp from 'whatsapp-web.js';
 // types
-import { App } from '../../types/global.type';
+import { App } from '../types/global.type';
 
 const app = global as App;
 

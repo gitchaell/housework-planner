@@ -3,12 +3,9 @@ import cron from 'node-cron';
 // types
 import { App } from './types/global.type';
 // routes
-import AuthRouter from './routes/auth.route';
-import PlannerRouter from './routes/planner.route';
+import { authRoutes, plannerRoutes } from './routes';
 // services
-import { LogService } from './shared/services/log.service';
-import { WhatsappService } from './shared/services/whatsapp.service';
-import { HouseworkPlanner } from './shared/services/housework-planner.service';
+import { HouseworkPlanner, LogService, WhatsappService } from './services';
 
 (() => {
 
@@ -20,22 +17,13 @@ import { HouseworkPlanner } from './shared/services/housework-planner.service';
   app.planner = new HouseworkPlanner();
 
   cron.schedule('0 0 0 * * monday', () => {
-
-    app.logger.info('Running every monday');
-
-    if (!app.authenticated) {
-      app.logger.error('Whatsapp Client not authenticated. Job finished!');
-      return;
-    }
-
-    app.planner.generateWeekMap();
-
+    app.planner.execute();
   });
 
   const server = express();
 
-  server.use(AuthRouter);
-  server.use(PlannerRouter);
+  server.use(authRoutes);
+  server.use(plannerRoutes);
 
   server.listen(3000, () => {
     app.logger.info('Server Running Live on http://localhost:3000');

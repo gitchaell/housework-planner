@@ -5,14 +5,11 @@ import { App } from '../types/global.type';
 
 const app = global as App;
 
-const PlannerRouter = Router();
+export const plannerRoutes = Router()
+  .get('/planner', (_, res) => {
 
-PlannerRouter.get('/planner', async (_, res) => {
+    app.planner.execute();
 
-  const weekmap = await app.planner.generateWeekMap();
-
-  res.json(weekmap);
-  res.end();
-});
-
-export default PlannerRouter;
+    res.send('executed');
+    res.end();
+  });

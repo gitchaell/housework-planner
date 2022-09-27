@@ -5,22 +5,21 @@ import { App } from '../types/global.type';
 
 const app = global as App;
 
-const AuthRouter = Router();
+export const authRoutes = Router()
+  .get('/auth', (_, res) => {
 
-AuthRouter.get('/auth', (_, res) => {
+    if (app.authenticated) {
 
-  if (app.authenticated) {
+      res.write("<html><body><h2>Already Authenticated</h2></body></html>");
+      res.end();
 
-    res.write("<html><body><h2>Already Authenticated</h2></body></html>");
-    res.end();
+    } else {
 
-  } else {
+      fs.readFile('./code.qr', (error, qrcode) => {
 
-    fs.readFile('./code.qr', (error, qrcode) => {
+        if (error) throw error;
 
-      if (error) throw error;
-
-      res.write(`
+        res.write(`
         <html>
         <body>
             <div id="qrcode"></div>
@@ -38,10 +37,8 @@ AuthRouter.get('/auth', (_, res) => {
             </script>
         </body>
         </html>`);
-      res.end();
+        res.end();
 
-    });
-  }
-});
-
-export default AuthRouter;
+      });
+    }
+  });
