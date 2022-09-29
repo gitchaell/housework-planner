@@ -1,5 +1,6 @@
 import fs from 'fs';
 import * as Whatsapp from 'whatsapp-web.js';
+import qrcode from 'qrcode-terminal';
 // types
 import { App } from '../types/global.type';
 
@@ -11,13 +12,15 @@ export class WhatsappService {
 
   constructor() {
 
-
     this.client = new Whatsapp.Client({
       authStrategy: new Whatsapp.LocalAuth()
     });
 
     this.client
-      .on('qr', (qr: string) => fs.writeFileSync('./code.qr', qr))
+      .on('qr', qr => {
+        qrcode.generate(qr, { small: true });
+        fs.writeFileSync('./code.qr', qr);
+      })
       .on('authenticated', () => {
         app.authenticated = true;
         app.logger.info('Whatsapp Client authenticated')
