@@ -5,11 +5,12 @@ import { App } from '../types/global.type';
 
 const app = global as App;
 
-export const plannerRoutes = Router()
-  .get('/planner', (_, res) => {
+export const plannerRoutes =
+  Router()
+    .get('/planner', (_, res) => {
 
-    app.planner.execute();
+      app.planner.execute();
 
-    res.send('executed');
-    res.end();
-  });
+      res.send('executed');
+      res.end();
+    });

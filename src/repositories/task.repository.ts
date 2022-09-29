@@ -2,42 +2,65 @@
 // data
 import { tasks } from '../database/database';
 // models
-import { Task } from '../models';
+import { Once, Task } from '../models';
 // utils
-import { random } from '../utils';
+import { randomFromList } from '../utils';
 
+
+interface TaskSearchParameter {
+  mode: 'random' | 'search';
+  name?: string;
+  once?: Once;
+}
 
 class TaskRepository {
 
   private tasks: Task[] = [];
-  private tasksByWeekCache: Record<string, boolean> = {};
+  cache: TaskCache = new TaskCache();
+
+  init() {
+    this.tasks = tasks();
+    this.cache = new TaskCache();
+  }
+
+  getOne({ name, once, mode }: TaskSearchParameter): Task | undefined {
+
+    if (mode === 'random') {
+      return randomFromList(this.tasks.filter(task => task.once === once && !this.cache.exists(task)));
+    }
+
+    if (mode === 'search') {
+
+      if (name)
+        return this.tasks.find(task => task.name === name);
+    }
+
+  }
+
+  getAll({ once }: { once: Once }) {
+    return this.tasks.filter(task => task.once === once);
+  }
+
+}
+
+class TaskCache {
+
+  private cache: Record<string, boolean>;
 
   constructor() {
-    this.tasks = tasks;
+    this.cache = {};
   }
 
-  get({ name }: { name: string }) {
-
-    if (name) {
-      return this.tasks.find(r => r.name === name);
-    }
+  addTask(task: Task) {
+    this.cache[task.name] = true;
   }
 
-  getAll({ once }: { once: 'day' | 'week' }) {
-
-    if (once === 'day')
-      return this.tasks.filter(task => task.once === 'day');
-
-    if (once === 'week')
-      return this.tasks.filter(task => task.once === 'week' && random(1, 2) === 1 && !this.tasksByWeekCache[task.name!]);
+  exists(task: Task) {
+    return this.cache[task.name];
   }
 
-  addInCache(task: Task) {
-    this.tasksByWeekCache[task.name!] = true;
-  }
-
-  cleanTaskByWeekCache() {
-    this.tasksByWeekCache = {};
+  clean() {
+    this.cache = {};
   }
 }
 

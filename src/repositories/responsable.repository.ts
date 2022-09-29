@@ -2,22 +2,27 @@
 import { responsables } from '../database/database';
 // models
 import { Responsable } from '../models';
+// utils
 import { randomFromList } from '../utils';
 
+interface ResponsableSearchParameter {
+  mode: 'random' | 'search',
+  name?: string,
+}
 
 class ResponsableRepository {
 
   private responsables: Responsable[] = [];
 
-  constructor() {
-    this.responsables = responsables;
+  init() {
+    this.responsables = responsables();
   }
 
   getAll() {
     return this.responsables;
   }
 
-  get({ name, mode }: { name?: string, mode: 'random' | 'search' }) {
+  get({ name, mode }: ResponsableSearchParameter) {
 
     if (mode === 'random') {
       return randomFromList(this.responsables);
@@ -29,10 +34,6 @@ class ResponsableRepository {
         return this.responsables.find(r => r.name === name);
       }
     }
-  }
-
-  cleanAllUnavailableHoursByTasks() {
-    this.responsables.forEach(r => r.cleanUnavailableHoursByTasks());
   }
 }
 

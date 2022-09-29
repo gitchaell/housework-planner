@@ -1,47 +1,14 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-// interfaces
-import { HourRange } from '../interfaces';
-// models
-import { Responsable } from './responsable.model';
-// utils
-import { random } from '../utils';
-
+export type DayTime = 'morning' | 'afternoon' | 'evening' | 'anytime';
+export type Once = 'day' | 'week';
 
 export class Task {
-  name?: string;
-  estimatedHours?: number;
-  once?: 'day' | 'week' = 'day';
-  responsable?: Responsable;
-  hourRange?: HourRange;
+  name: string;
+  once: Once = 'day';
+  daytime: DayTime = 'anytime';
 
-  constructor(task: Partial<Task>) {
+  constructor(task: Task) {
     this.name = task.name;
-    this.estimatedHours = task.estimatedHours;
     this.once = task.once;
+    this.daytime = task.daytime;
   }
-
-  assignResponsable(responsable: Responsable) {
-    this.responsable = responsable;
-  }
-
-  assignHourRange(weekday: number) {
-
-    const lapse = HourRange.lapse(this.estimatedHours!);
-
-    let startHour = random(1, 24);
-    let endHour = startHour + lapse;
-    let loops = 0;
-
-    while (!this.responsable?.isAvailableBetween(weekday, { startHour, endHour } as HourRange)) {
-      startHour = random(1, 24);
-      endHour = startHour + lapse;
-      loops++;
-
-      if (loops > 1000) return;
-
-    }
-
-    this.hourRange = new HourRange({ startHour, endHour });
-  }
-
 }
