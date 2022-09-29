@@ -1,37 +1,72 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import fs from 'fs';
 import { createEvents, EventAttributes } from 'ics';
+import nodeHtmlToImage from 'node-html-to-image';
+// assets
+import { style } from '../assets/weekmap-table.css';
 // model
 import { DayTime, Task } from './task.model';
 // utils
-import { random, range, slug, toDateArray } from '../utils';
+import { hourDisplay, random, range, slug, toDateArray, weekDisplay } from '../utils';
 
+export type DayMap = Record<number, WeeklyItem>;
+export type WeekMap = Record<number, DayMap>;
 
 export class WeeklyMap {
 
-  private name: string;
-  private map: Record<number, WeeklyItem[]>;
+  static MAX_TASKS_BY_HOUR = 3;
 
-  constructor(name: string, map: Record<number, WeeklyItem[]>) {
+  private name: string;
+  private map: WeekMap;
+
+  private startdate: Date;
+  private outputdirpath: string;
+
+  mediapaths: string[] = [];
+
+
+  static initDaymap({ enabledHours, disabledHours }: { enabledHours: number[], disabledHours: number[] }): DayMap {
+    return Object.assign({}, ...[
+      ...disabledHours.map(hour => ({ [hour]: new WeeklyItem('disabled') })),
+      ...enabledHours.map(hour => ({ [hour]: new WeeklyItem('enabled') })),
+    ]);
+  }
+
+  constructor(name: string, map: WeekMap) {
     this.name = name;
     this.map = map;
+    this.mediapaths = [];
+    this.startdate = new Date(2022, 8, 26, 0, 0, 0, 0);// new Date(Date.now());
+    this.outputdirpath = `./output/${slug(this.startdate.toDateString())}`;
+    fs.mkdirSync(this.outputdirpath, { recursive: true });
+  }
+
+  getItem(weekday: number, hour: number) {
+    return this.map[weekday][hour];
   }
 
   addTask(weekday: number, task: Task) {
 
-    let hour = random(1, 24);
     let loops = 0;
 
-    while (!(this.map[weekday][hour - 1].state === 'enabled' && this.hourIsValid(hour, task.daytime))) {
-      hour = random(1, 24);
+    let hour = random(1, 24);
+    let weeklyItem = this.getItem(weekday, hour);
+
+    while (weeklyItem.state === 'disabled' || !this.hourIsValid(hour, task.daytime)) {
+
       loops++;
 
-      if (loops > 1000) return;
+      hour = random(1, 24);
+      weeklyItem = this.getItem(weekday, hour);
 
+      if (loops > 1000) return;
     }
 
-    this.map[weekday][hour - 1].task = task;
-    this.map[weekday][hour - 1].state = 'disabled';
+    const tasksByHour = weeklyItem.tasks.push(task);
+
+    if (tasksByHour === WeeklyMap.MAX_TASKS_BY_HOUR)
+      weeklyItem.state = 'disabled';
   }
 
   hourIsValid(hour: number, daytime: DayTime) {
@@ -44,33 +79,34 @@ export class WeeklyMap {
     }[daytime];
   }
 
-  getICSPath(): string {
 
-    // const date = new Date(Date.now());
-    const date = new Date(2022, 8, 26, 0, 0, 0, 0);
-    const dirname = slug(date.toDateString());
+  toICS(): void {
 
+    const date = new Date(this.startdate);
     const events: EventAttributes[] = [];
 
     for (const weekday of range(1, 7)) {
 
       for (const hour of range(1, 24)) {
 
-        const { task } = this.map[weekday][hour - 1];
+        const { tasks } = this.getItem(weekday, hour);
 
-        if (!task) continue;
+        if (!tasks.length) continue;
 
-        const startDate = date;
+        const startDate = new Date(date);
         startDate.setHours(hour);
 
-        const endDate = date;
+        const endDate = new Date(date);
         endDate.setHours(hour + 1);
 
-        events.push({
-          title: task.name!,
-          start: toDateArray(startDate),
-          end: toDateArray(endDate),
-        } as EventAttributes);
+        tasks.forEach(task => {
+
+          events.push({
+            title: task.name,
+            start: toDateArray(startDate),
+            end: toDateArray(endDate),
+          } as EventAttributes);
+        });
       }
 
       date.setDate(date.getDate() + 1);
@@ -78,15 +114,81 @@ export class WeeklyMap {
 
     const { error, value } = createEvents(events);
 
-    if (error) throw error;
+    if (error) throw new Error('An error occurred during ICS file generation');
 
-    const dirpath = `./output/${dirname}`;
-    const icspath = `${dirpath}/${this.name}.ics`;
+    const icspath = `${this.outputdirpath}/${this.name}.ics`;
 
-    fs.mkdirSync(dirpath, { recursive: true });
     fs.writeFileSync(icspath, value!);
 
-    return icspath;
+    this.mediapaths.push(icspath);
+  }
+
+
+  toHTML(): string {
+
+    const date = new Date(this.startdate);
+    const weekDate = new Date(date);
+
+    const weeklyRowHeader = range(1, 7).map(_ => {
+      const weeklyRowCell = weekDisplay(weekDate);
+      weekDate.setDate(weekDate.getDate() + 1);
+      return `<th>${weeklyRowCell}</th>`;
+    });
+
+    const weeklyTable = [
+      `<tr><th colspan="8">${this.name}</th></tr>`,
+      `<tr><th></th>${weeklyRowHeader.join('')}</tr>`
+    ];
+
+    const hourDate = new Date(date);
+
+    range(1, 24).forEach(hour => {
+
+      hourDate.setHours(hourDate.getHours() + 1);
+
+      const hourRowCell = hourDisplay(hourDate);
+
+      const weeklyRowBody = [`<th>${hourRowCell}</th>`];
+
+      range(1, 7).forEach(weekday => {
+
+        const { tasks, state } = this.getItem(weekday, hour);
+
+        const tasksCell = `<div>${tasks.map(task => `<span>${task.name}</span>`).join('')}</div>`;
+        const cellClass = state === 'disabled' && tasks.length == 0 ? 'blocked' : ''
+
+        weeklyRowBody.push(`<td class="${cellClass}">${tasksCell}</td>`);
+      });
+
+      weeklyTable.push(`<tr>${weeklyRowBody.join('')}</tr>`);
+    });
+
+    return `<table>${weeklyTable.join('')}</table>`;
+  }
+
+
+  async toImage(): Promise<void> {
+
+    const imagepath = `${this.outputdirpath}/${this.name}.png`;
+
+    const image = await nodeHtmlToImage({
+      html: `<html>
+        <head>
+          <style>${style}</style>
+        </head>
+        <body style="width: 890px;">
+          ${this.toHTML()}
+        </body>
+      </html>`,
+      puppeteerArgs: { defaultViewport: null },
+    });
+
+    if (!image) throw new Error('An error occurred during image generation');
+
+    fs.writeFileSync(imagepath, image as string);
+
+    this.mediapaths.push(imagepath);
+
   }
 
 
@@ -96,30 +198,32 @@ export class WeeklyMap {
 
     for (const hour of range(1, 24)) {
 
-      const weekrow: Record<number, string> = {};
+      const weeklyRow: Record<number, string> = {};
 
       for (const weekday of range(1, 7)) {
 
-        const item = this.map[weekday][hour - 1];
+        const { tasks } = this.getItem(weekday, hour);
 
-        weekrow[weekday] = item.task ? item.task.name : '*';
-        // row[weekday] = item.state;
+        weeklyRow[weekday] = tasks.length
+          ? tasks.map(task => task.name).join(' & ')
+          : '*';
       }
 
-      weeklyTable.push(weekrow);
+      weeklyTable.push(weeklyRow);
     }
 
+    console.log(this.name);
     console.table(weeklyTable);
   }
 }
 
 export class WeeklyItem {
-  task?: Task;
+  tasks: Task[];
   state: WeeklyItemState;
 
-  constructor({ task, state }: WeeklyItem) {
-    this.task = task;
+  constructor(state: WeeklyItemState) {
     this.state = state;
+    this.tasks = [];
   }
 }
 

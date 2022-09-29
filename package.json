@@ -33,6 +33,7 @@
     "ics": "^2.40.0",
     "inquirer": "^9.1.2",
     "node-cron": "^3.0.2",
+    "node-html-to-image": "^3.2.4",
     "pino": "^8.6.0",
     "pino-pretty": "^9.1.0",
     "whatsapp-web.js": "^1.17.1"

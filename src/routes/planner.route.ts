@@ -8,9 +8,6 @@ const app = global as App;
 export const plannerRoutes =
   Router()
     .get('/planner', (_, res) => {
-
-      app.planner.execute();
-
-      res.send('executed');
+      res.send(app.planner.execute());
       res.end();
     });

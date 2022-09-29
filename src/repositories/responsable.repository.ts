@@ -22,7 +22,7 @@ class ResponsableRepository {
     return this.responsables;
   }
 
-  get({ name, mode }: ResponsableSearchParameter) {
+  getOne({ name, mode }: ResponsableSearchParameter) {
 
     if (mode === 'random') {
       return randomFromList(this.responsables);
