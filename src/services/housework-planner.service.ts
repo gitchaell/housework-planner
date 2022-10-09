@@ -14,13 +14,13 @@ const app = global as App;
 
 export class HouseworkPlanner {
 
-  execute() {
+  async execute() {
 
     responsableRepository.init();
     taskRepository.init();
 
     this.buildWeekMap();
-    this.writeMediaFiles();
+    await this.writeMediaFiles();
     this.sendMediaFiles();
 
     return this.getWeeklyMapsHTML();
@@ -73,13 +73,14 @@ export class HouseworkPlanner {
       </html>`;
   }
 
-  private writeMediaFiles() {
+  private async writeMediaFiles() {
 
-    responsableRepository.getAll()
-      .forEach(async responsable => {
-        responsable.weeklyMap.toICS();
-        await responsable.weeklyMap.toImage();
-      });
+    const responsables = responsableRepository.getAll();
+
+    for (const responsable of responsables) {
+      responsable.weeklyMap.toICS();
+      await responsable.weeklyMap.toImage();
+    }
 
     app.logger.info(`ICS and PNG files have been generated and exported.`);
   }
@@ -91,19 +92,19 @@ export class HouseworkPlanner {
       return;
     }
 
-    responsableRepository
-      .getAll()
-      .forEach(responsable => {
+    const responsables = responsableRepository.getAll();
 
-        responsable.weeklyMap.mediapaths.forEach(mediapath => {
+    for (const responsable of responsables) {
 
-          const media = MessageMedia.fromFilePath(mediapath);
+      for (const mediapath of responsable.weeklyMap.mediapaths) {
 
-          app.whatsapp.client.sendMessage(`${responsable.phone}@c.us`, media).then(() => {
-            app.logger.info(`File ${mediapath} successfully sent to ${responsable.name}`);
-          });
+        const media = MessageMedia.fromFilePath(mediapath);
+
+        app.whatsapp.client.sendMessage(`${responsable.phone}@c.us`, media).then(() => {
+          app.logger.info(`File ${mediapath} successfully sent to ${responsable.name}`);
         });
-      });
+      }
+    }
   }
 
 }

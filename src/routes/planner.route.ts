@@ -7,7 +7,7 @@ const app = global as App;
 
 export const plannerRoutes =
   Router()
-    .get('/planner', (_, res) => {
-      res.send(app.planner.execute());
+    .get('/planner', async (_, res) => {
+      res.send(await app.planner.execute());
       res.end();
     });

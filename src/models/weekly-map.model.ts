@@ -37,7 +37,7 @@ export class WeeklyMap {
     this.name = name;
     this.map = map;
     this.mediapaths = [];
-    this.startdate = new Date(2022, 8, 26, 0, 0, 0, 0);// new Date(Date.now());
+    this.startdate = new Date(2022, 9, 10, 0, 0, 0, 0);// new Date(Date.now());
     this.outputdirpath = `./output/${slug(this.startdate.toDateString())}`;
     fs.mkdirSync(this.outputdirpath, { recursive: true });
   }
@@ -105,6 +105,14 @@ export class WeeklyMap {
             title: task.name,
             start: toDateArray(startDate),
             end: toDateArray(endDate),
+            alarms: [{
+              action: 'audio',
+              description: 'Reminder',
+              trigger: { minutes: 5, before: true },
+              repeat: 1,
+              attachType: 'VALUE=URI',
+              attach: 'Glass'
+            }]
           } as EventAttributes);
         });
       }

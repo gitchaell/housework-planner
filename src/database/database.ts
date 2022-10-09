@@ -83,16 +83,14 @@ export const tasks = (): Task[] => [
   // Per Day
   new Task({ name: 'Lavar platos', once: 'day', daytime: 'anytime' }),
   new Task({ name: 'Barrer', once: 'day', daytime: 'anytime' }),
+  new Task({ name: 'Trapear', once: 'day', daytime: 'anytime' }),
   new Task({ name: 'Preparar desayuno', once: 'day', daytime: 'morning' }),
   new Task({ name: 'Preparar cena', once: 'day', daytime: 'evening' }),
   // Per Week
-  new Task({ name: 'Trapear', once: 'week', daytime: 'anytime' }),
   new Task({ name: 'Limpiar baño', once: 'week', daytime: 'anytime' }),
-  new Task({ name: 'Lavar ropa', once: 'week', daytime: 'anytime' }),
   new Task({ name: 'Limpiar muebles', once: 'week', daytime: 'anytime' }),
   new Task({ name: 'Sacar la basura', once: 'week', daytime: 'anytime' }),
   new Task({ name: 'Lavar sabanas', once: 'week', daytime: 'anytime' }),
   new Task({ name: 'Limpiar hornillas', once: 'week', daytime: 'anytime' }),
   new Task({ name: 'Limpiar refrigeradora', once: 'week', daytime: 'anytime' }),
-  new Task({ name: 'Limpiar jaula de pajaros', once: 'week', daytime: 'anytime' }),
 ];
