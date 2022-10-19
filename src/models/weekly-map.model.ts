@@ -37,7 +37,7 @@ export class WeeklyMap {
     this.name = name;
     this.map = map;
     this.mediapaths = [];
-    this.startdate = new Date(2022, 9, 10, 0, 0, 0, 0);// new Date(Date.now());
+    this.startdate = new Date(2022, 9, 17, 0, 0, 0, 0);// new Date(Date.now());
     this.outputdirpath = `./output/${slug(this.startdate.toDateString())}`;
     fs.mkdirSync(this.outputdirpath, { recursive: true });
   }

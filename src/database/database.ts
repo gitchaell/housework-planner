@@ -82,8 +82,7 @@ export const responsables = (): Responsable[] => [
 export const tasks = (): Task[] => [
   // Per Day
   new Task({ name: 'Lavar platos', once: 'day', daytime: 'anytime' }),
-  new Task({ name: 'Barrer', once: 'day', daytime: 'anytime' }),
-  new Task({ name: 'Trapear', once: 'day', daytime: 'anytime' }),
+  new Task({ name: 'Barrer & Trapear', once: 'day', daytime: 'anytime' }),
   new Task({ name: 'Preparar desayuno', once: 'day', daytime: 'morning' }),
   new Task({ name: 'Preparar cena', once: 'day', daytime: 'evening' }),
   // Per Week
